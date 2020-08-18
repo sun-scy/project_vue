@@ -1,6 +1,10 @@
 
-const baseUrl = process.env.VUE_APP_API_BASE_URL
-console.log(baseUrl)
+const govUrl = process.env.VUE_APP_API_BASE_URL
+const publicUrl = process.env.VUE_APP_API_PUBLIC
+const formcUrl =  process.env.VUE_APP_API_FORMC
+
+
+
 export default (axios,config={})=>{
     if(!config.api)
         throw new Error("api配置必须存在")
@@ -11,7 +15,7 @@ export default (axios,config={})=>{
     const api = config.api;
 
     for(let name in api){
-        let {url,method,isForm,hooks,crosUrl,token} =api[name];
+        let {url,method,isForm,hooks,token,cross} =api[name];
         if(hooks){
             api[name].beforeReq = hooks.beforeReq;
             api[name].AfterReq = hooks.AfterReq;
@@ -30,17 +34,6 @@ export default (axios,config={})=>{
             }else {
                 transformData = data;
             }
-
-
-            //是否要跨域
-            // url = "/4000/position/1,2"
-            // url = "/4000/4000/position/1,2"
-            if(crosUrl){
-                url = crosUrl + url;
-                crosUrl ="";
-            }
-
-
             /*
                 前端向后退传递数据的方式
                     1. params    localhsot:8080/a/b/params1/params2
@@ -51,7 +44,17 @@ export default (axios,config={})=>{
             if( Authorization === null || Authorization===undefined){
                 Authorization = ""
             }
-            url = baseUrl+url
+            switch (cross) {
+                case 'govUrl':
+                    url = govUrl+url
+                    break;
+                case 'public':
+                    url = publicUrl+url
+            
+                default:
+                    url = formcUrl+url
+                    break;
+            }
             let body = "";
             switch (method){
                 case "get":
@@ -75,7 +78,7 @@ export default (axios,config={})=>{
                         method,
                         data:transformData,
                         headers:{
-                            Authorization:'Bearer'
+                            Authorization:token
                         }
                     })
                     api[name].AfterReq && api[name].AfterReq()
